@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Bot Documentation AI</title>
+    <style>
+        :root {
+            --primary-color: #1a73e8;
+            --secondary-color: #f1f3f4;
+            --text-color: #202124;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #e8f0fe 0%, #f5f7fa 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        #chat-container {
+            width: 100%;
+            max-width: 700px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        #chat-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        #api-key-section {
+            padding: 15px;
+            background: var(--secondary-color);
+            border-bottom: 1px solid #ddd;
+        }
+
+        #api-key-display {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            word-break: break-all;
+            margin-top: 10px;
+            font-family: monospace;
+        }
+
+        #chat-output {
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            background: #fafafa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 12px;
+            max-width: 80%;
+            line-height: 1.5;
+        }
+
+        .user-message {
+            background: var(--primary-color);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+
+        .bot-message {
+            background: var(--secondary-color);
+            color: var(--text-color);
+            border-bottom-left-radius: 4px;
+        }
+
+        .bot-message pre {
+            background: #333;
+            color: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        #input-container {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #ddd;
+            background: white;
+        }
+
+        #user-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-right: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        #user-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        button {
+            padding: 12px 24px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #1557b0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 600px) {
+            #chat-container {
+                margin: 10px;
+            }
+            #chat-output {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="chat-header">
+            <h2>Telegram Bot Documentation AI</h2>
+        </div>
+        <div id="api-key-section">
+            <button onclick="generateApiKey()">Generate API Key</button>
+            <div id="api-key-display" style="display: none;"></div>
+        </div>
+        <div id="chat-output"></div>
+        <div id="input-container">
+            <input type="text" id="user-input" placeholder="Ask about Telegram bot commands...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // Knowledge base for Telegram bot commands
+        const knowledgeBase = [
+            {
+                keywords: ["ban", "user", "block"],
+                response: "To ban a user, use: <code>/ban <user_id></code> or reply with <code>/ban</code>."
+            },
+            {
+                keywords: ["kick", "user", "remove"],
+                response: "To kick a user, use: <code>/kick <user_id></code> or reply with <code>/kick</code>."
+            },
+            {
+                keywords: ["mute", "user", "silence"],
+                response: "To mute a user, use: <code>/mute <user_id></code> or reply with <code>/mute</code>."
+            },
+            {
+                keywords: ["unban", "user", "restore"],
+                response: "To unban a user, use: <code>/unban <user_id></code>."
+            },
+            {
+                keywords: ["start", "bot", "begin"],
+                response: "To start the bot, use: <code>/start</code>."
+            },
+            {
+                keywords: ["help", "support", "assist"],
+                response: "To get help, use: <code>/help</code>."
+            },
+            {
+                keywords: ["api", "key", "generate"],
+                response: "Use the 'Generate API Key' button above to create a new API key."
+            }
+        ];
+
+        // Mock API keys storage (client-side)
+        const apiKeys = new Set();
+
+        // Function to generate a random API key
+        function generateApiKey() {
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let apiKey = '';
+            for (let i = 0; i < 32; i++) {
+                apiKey += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            apiKeys.add(apiKey);
+            const apiKeyDisplay = document.getElementById('api-key-display');
+            apiKeyDisplay.textContent = apiKey;
+            apiKeyDisplay.style.display = 'block';
+            return apiKey;
+
+            // Uncomment to fetch from a backend (when deployed)
+            /*
+            try {
+                const response = await fetch('https://your-backend-url/api/generate-key');
+                const data = await response.json();
+                apiKeys.add(data.apiKey);
+                const apiKeyDisplay = document.getElementById('api-key-display');
+                apiKeyDisplay.textContent = data.apiKey;
+                apiKeyDisplay.style.display = 'block';
+                return data.apiKey;
+            } catch (error) {
+                console.error('Error fetching API key:', error);
+                alert('Failed to generate API key. Using client-side fallback.');
+                return generateApiKey(); // Fallback to client-side
+            }
+            */
+        }
+
+        // Simple fuzzy matching function
+        function fuzzyMatch(input, keyword) {
+            input = input.toLowerCase();
+            keyword = keyword.toLowerCase();
+            let i = 0, j = 0;
+            while (i < input.length && j < keyword.length) {
+                if (input[i] === keyword[j]) j++;
+                i++;
+            }
+            return j === keyword.length;
+        }
+
+        // Function to format response
+        function formatResponse(responseObj) {
+            return `<pre>${JSON.stringify(responseObj, null, 2)}</pre>`;
+        }
+
+        // Mock API response (client-side)
+        function mockApiResponse(apiKey, query) {
+            if (!apiKey || !apiKeys.has(apiKey)) {
+                return { RESPONSE: "Invalid or missing API key", MADE_BY: "TEAM X OG", JOIN: "@TEAM_X_OG", ERROR: true };
+            }
+
+            const input = query.toLowerCase().trim();
+            if (!input) {
+                return { RESPONSE: "Please ask something!", MADE_BY: "TEAM X OG", JOIN: "@TEAM_X_OG", ERROR: true };
+            }
+
+            let bestMatch = null;
+            let maxScore = 0;
+
+            for (const entry of knowledgeBase) {
+                let score = 0;
+                for (const keyword of entry.keywords) {
+                    if (fuzzyMatch(input, keyword)) {
+                        score += 1;
+                    }
+                }
+                if (score > maxScore) {
+                    maxScore = score;
+                    bestMatch = entry;
+                }
+            }
+
+            const response = bestMatch ? bestMatch.response : "Sorry, I don't understand. Try asking about commands like 'ban', 'kick', or 'mute'.";
+            return { RESPONSE: response, MADE_BY: "TEAM X OG", JOIN: "@TEAM_X_OG" };
+        }
+
+        // Function to get response
+        async function getResponse(userInput) {
+            const apiKey = document.getElementById('api-key-display').textContent;
+
+            // Mock API response for GitHub Pages
+            const responseObj = mockApiResponse(apiKey, userInput);
+            return formatResponse(responseObj);
+
+            // Uncomment to use with a backend
+            /*
+            if (apiKey) {
+                try {
+                    const response = await fetch('https://your-backend-url/api/query', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ apiKey, query: userInput })
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        return formatResponse(data);
+                    } else {
+                        console.error('API error:', data.error);
+                    }
+                } catch (error) {
+                    console.error('Error fetching from API:', error);
+                }
+            }
+
+            // Fallback to local knowledge base
+            const input = userInput.toLowerCase().trim();
+            if (!input) return formatResponse({ RESPONSE: "Please ask something!", MADE_BY: "TEAM X OG", JOIN: "@TEAM_X_OG", ERROR: true });
+
+            let bestMatch = null;
+            let maxScore = 0;
+
+            for (const entry of knowledgeBase) {
+                let score = 0;
+                for (const keyword of entry.keywords) {
+                    if (fuzzyMatch(input, keyword)) {
+                        score += 1;
+                    }
+                }
+                if (score > maxScore) {
+                    maxScore = score;
+                    bestMatch = entry;
+                }
+            }
+
+            const response = bestMatch ? bestMatch.response : "Sorry, I don't understand. Try asking about commands like 'ban', 'kick', or 'mute'.";
+            return formatResponse({ RESPONSE: response, MADE_BY: "TEAM X OG", JOIN: "@TEAM_X_OG" });
+            */
+        }
+
+        // Function to handle sending messages
+        async function sendMessage() {
+            const userInput = document.getElementById("user-input").value;
+            const chatOutput = document.getElementById("chat-output");
+
+            if (userInput.trim() !== "") {
+                // Append user message
+                const userMessage = `<div class="message user-message"><strong>You:</strong> ${userInput}</div>`;
+                chatOutput.innerHTML += userMessage;
+
+                // Get and append AI response
+                const aiResponse = await getResponse(userInput);
+                const botMessage = `<div class="message bot-message">${aiResponse}</div>`;
+                chatOutput.innerHTML += botMessage;
+
+                // Clear input
+                document.getElementById("user-input").value = "";
+
+                // Scroll to bottom
+                chatOutput.scrollTop = chatOutput.scrollHeight;
+            }
+        }
+
+        // Allow pressing Enter to send message
+        document.getElementById("user-input").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+  </html
